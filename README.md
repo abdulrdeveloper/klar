@@ -1,6 +1,6 @@
 
 # Klar AI Tutor 
-## A Conversational AI Tutor for Personalized Learning and for helping students with their studies. 
+## A Conversational AI Tutor with 6 AI Models for Personalized Learning and for helping students with their studies. 
 
 ```
 klar
