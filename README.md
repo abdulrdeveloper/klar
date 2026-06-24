@@ -19,8 +19,6 @@ klar
 │     ├─ auth
 │     │  ├─ forgot-password
 │     │  │  └─ page.tsx
-│     │  ├─ verify-email
-│     │  │  └─ page.tsx
 │     │  ├─ login
 │     │  │  └─ page.tsx
 │     │  └─ register

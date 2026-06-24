@@ -17,6 +17,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+        await new Promise((res) => setTimeout(res, 1200));
+    setLoading(false);
     setError("");
 
     if (!email.trim() || !password.trim()) {
@@ -32,7 +34,7 @@ export default function LoginPage() {
 
       <button
         onClick={() => router.back()}
-        className="absolute top-6 right-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200 cursor-pointer"
+        className="absolute top-6 left-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200 cursor-pointer"
       >
         <ArrowLeft size={16} className="transform group-hover:-translate-x-0.5 transition-transform" />
         Go Back

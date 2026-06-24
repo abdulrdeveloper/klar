@@ -18,9 +18,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+        await new Promise((res) => setTimeout(res, 1200));
+    setLoading(false);
     setError("");
 
-    router.push("/auth/verify-email");
+    router.push("/auth/login");
   };
 
   return (
@@ -28,7 +30,7 @@ export default function RegisterPage() {
 
       <button
         onClick={() => router.back()}
-        className="absolute top-6 right-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200 cursor-pointer"
+        className="absolute top-6 left-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200 cursor-pointer"
       >
         <ArrowLeft size={16} className="transform group-hover:-translate-x-0.5 transition-transform" />
         Go Back
