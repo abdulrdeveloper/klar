@@ -32,21 +32,22 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-md space-y-6">
 
-        <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            {isSubmitted ? "Check your inbox" : "Reset your password"}
-          </h1>
-          <p className="mt-2 text-sm text-[hsl(228,6%,44%)]">
-            {isSubmitted
-              ? `We sent a reset link to ${email}`
-              : "Enter your email and we'll send you a reset link."}
-          </p>
-        </div>
+        {!isSubmitted && (
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              Reset your password
+            </h1>
+            <p className="mt-2 text-sm text-[hsl(228,6%,44%)]">
+              Enter your email and we'll send you a reset link.
+            </p>
+          </div>
+        )}
 
         <div className="border border-[hsl(228,8%,14%)] bg-white/[0.02] rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-xl">
 
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+<form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-xs font-medium text-[hsl(228,6%,44%)]">
                   Email
@@ -81,14 +82,21 @@ export default function ForgotPasswordPage() {
               </button>
             </form>
           ) : (
+
             <div className="text-center space-y-5">
               <div className="mx-auto w-14 h-14 rounded-full bg-[hsl(38,100%,56%)]/10 border border-[hsl(38,100%,56%)]/20 flex items-center justify-center text-[hsl(38,100%,56%)]">
                 <MailCheck size={26} />
               </div>
 
-              <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
-                Click the link in the email to reset your password. If you don't see it, check your spam folder.
-              </p>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">
+                  Check your inbox
+                </h2>
+                <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
+                  We've sent a password reset link to <span className="text-white font-medium">{email}</span>.
+                  Please check your inbox. If you don't see it, check your <span className="text-white font-medium">spam folder</span>.
+                </p>
+              </div>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-[hsl(228,8%,14%)]" />
@@ -100,21 +108,23 @@ export default function ForgotPasswordPage() {
                 onClick={() => { setisSubmitted(false); setEmail(""); }}
                 className="text-xs font-medium text-[hsl(228,6%,44%)] hover:brightness-110 transition-all cursor-pointer"
               >
-                Wrong email? <span className="text-xs font-medium text-[hsl(38,100%,56%)] hover:brightness-110 transition-all cursor-pointer">Try again</span>
+                Wrong email? <span className="text-xs font-medium text-[hsl(38,100%,56%)] hover:brightness-110 transition-all cursor-pointer">Change it</span>
               </button>
             </div>
           )}
         </div>
 
-        <p className="text-center text-sm text-[hsl(228,6%,44%)]">
-          Remembered your password?{" "}
-          <Link
-            href="/auth/login"
-            className="text-[hsl(38,100%,56%)] font-medium hover:brightness-110 transition-all"
-          >
-            Sign in
-          </Link>
-        </p>
+        {!isSubmitted && (
+          <p className="text-center text-sm text-[hsl(228,6%,44%)]">
+            Remembered your password?{" "}
+            <Link
+              href="/auth/login"
+              className="text-[hsl(38,100%,56%)] font-medium hover:brightness-110 transition-all"
+            >
+              Sign in
+            </Link>
+          </p>
+        )}
 
       </div>
     </div>
