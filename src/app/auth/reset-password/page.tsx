@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-function getStrength(password: string): { score: number; label: string; color: string } {
+function getStrength(password: string): { score: number; label: string; color: string; textColor: string } {
   let score = 0;
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
 
-  if (score === 0 || password.length === 0) return { score: 0, label: "", color: "" };
-  if (score === 1) return { score: 1, label: "Weak", color: "bg-red-500" };
-  if (score === 2) return { score: 2, label: "Fair", color: "bg-yellow-500" };
-  if (score === 3) return { score: 3, label: "Good", color: "bg-blue-400" };
-  return { score: 4, label: "Strong", color: "bg-green-500" };
+  if (score === 0 || password.length === 0) return { score: 0, label: "", color: "", textColor: "" };
+  if (score === 1) return { score: 1, label: "Weak", color: "bg-red-500", textColor: "text-red-500" };
+  if (score === 2) return { score: 2, label: "Fair", color: "bg-yellow-500", textColor: "text-yellow-500" };
+  if (score === 3) return { score: 3, label: "Good", color: "bg-blue-400", textColor: "text-blue-400" };
+  return { score: 4, label: "Strong", color: "bg-green-500", textColor: "text-green-500" };
 }
 
 export default function ResetPasswordPage() {
@@ -115,15 +115,7 @@ export default function ResetPasswordPage() {
                       Strength:{" "}
                       <span
                         className={`font-medium ${
-                          strength.score === 1
-                            ? "text-red-400"
-                            : strength.score === 2
-                            ? "text-yellow-400"
-                            : strength.score === 3
-                            ? "text-blue-400"
-                            : "text-green-400"
-                        }`}
-                      >
+                          strength.score > 0 ? strength.textColor : "text-[hsl(228,6%,44%)]" }`} >
                         {strength.label}
                       </span>
                     </p>
@@ -155,7 +147,6 @@ export default function ResetPasswordPage() {
                   </button>
                 </div>
 
-                {/* Match indicator */}
                 {confirmPassword.length > 0 && (
                   <p className={`text-xs pt-0.5 ${password === confirmPassword ? "text-green-400" : "text-red-400"}`}>
                     {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords don't match"}
