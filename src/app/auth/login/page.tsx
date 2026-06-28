@@ -16,15 +16,17 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-        await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
-    setError("");
 
     if (!email.trim() || !password.trim()) {
       setError("Please fill in all fields before signing in.");
       return;
     }
+
+    setLoading(true);
+    await new Promise((res) => setTimeout(res, 1200));
+    setLoading(false);
+    setError("");
+
 
     router.push("/chat");
   };
@@ -125,7 +127,7 @@ export default function LoginPage() {
               ) : (
                 "Sign In"
               )}
-              </button>
+            </button>
           </form>
 
           <div className="flex items-center gap-3">

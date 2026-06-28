@@ -20,7 +20,6 @@ function getStrength(password: string): { score: number; label: string; color: s
 }
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

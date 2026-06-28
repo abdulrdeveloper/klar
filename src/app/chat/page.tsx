@@ -38,15 +38,25 @@ export default function ChatPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const handleSendMessage = () => {
-    if (input.trim() !== "") {
-      setMessages([...messages, { role: "user", content: input }]);
-      setInput("");
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 1500);
-    }
+  const handleSendMessage = async () => {
+    if (input.trim() === "") return;
+
+    const userMessage: Message = { role: "user", content: input };
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
+    setInput("");
+    setIsTyping(true);
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: updatedMessages }),
+    });
+
+    const text = await response.text();
+    setIsTyping(false);
+    setMessages([...updatedMessages, { role: "assistant", content: text }]);
   };
 
   useEffect(() => {
