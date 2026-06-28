@@ -39,25 +39,37 @@ export default function ChatPage() {
   const router = useRouter();
 
   const handleSendMessage = async () => {
-    if (input.trim() === "") return;
+  if (input.trim() === "") return;
 
-    const userMessage: Message = { role: "user", content: input };
-    const updatedMessages = [...messages, userMessage];
+  const userMessage: Message = { role: "user", content: input };
+  const updatedMessages = [...messages, userMessage];
 
-    setMessages(updatedMessages);
-    setInput("");
-    setIsTyping(true);
+  setMessages(updatedMessages);
+  setInput("");
+  setIsTyping(true);
 
+  try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: updatedMessages }),
     });
 
+    if (!response.ok || !response.body) {
+      setIsTyping(false);
+      setMessages([...updatedMessages, { role: "assistant", content: "Something went wrong. Please try again." }]);
+      return;
+    }
+
     const text = await response.text();
     setIsTyping(false);
     setMessages([...updatedMessages, { role: "assistant", content: text }]);
-  };
+
+  } catch {
+    setIsTyping(false);
+    setMessages([...updatedMessages, { role: "assistant", content: "Network error. Check your connection." }]);
+  }
+};
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -94,7 +106,7 @@ export default function ChatPage() {
   const isEmpty = messages.length === 0 && !isTyping;
 
   return (
-    <div className="flex flex-col h-screen w-full" style={{ backgroundColor: "#0f1015" }}>
+    <div className="flex flex-col h-[100dvh] w-full" style={{ backgroundColor: "#0f1015" }}>
 
       <div className="flex-1 overflow-y-auto">
         {isEmpty ? (
