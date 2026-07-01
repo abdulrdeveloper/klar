@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Lock, Eye, Loader2, EyeOff, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Eye,
+  Loader2,
+  EyeOff,
+  MessageCircle,
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,27 +31,44 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
     setError("");
+    
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
 
-
-    router.push("/chat");
+      if (response.ok) {
+        router.push("/chat");
+      } else {
+        setError(data.message || "Invalid email or password.");
+        setLoading(false);
+      }
+    } catch (error) {
+      setError("An error occurred during login. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 antialiased bg-[#0f1015]">
-
       <button
         onClick={() => router.back()}
         className="absolute top-6 left-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200 cursor-pointer"
       >
-        <ArrowLeft size={16} className="transform group-hover:-translate-x-0.5 transition-transform" />
+        <ArrowLeft
+          size={16}
+          className="transform group-hover:-translate-x-0.5 transition-transform"
+        />
         Go Back
       </button>
 
       <div className="w-full max-w-md space-y-6">
-
         <div className="text-center">
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             Welcome back
@@ -54,15 +79,19 @@ export default function LoginPage() {
         </div>
 
         <div className="border border-[hsl(228,8%,14%)] bg-white/[0.02] rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-xl space-y-4">
-
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+              <label
+                htmlFor="email"
+                className="text-xs font-medium text-[hsl(228,6%,44%)]"
+              >
                 Email
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+                <Mail
+                  size={16}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]"
+                />
                 <input
                   id="email"
                   type="email"
@@ -77,7 +106,10 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+                <label
+                  htmlFor="password"
+                  className="text-xs font-medium text-[hsl(228,6%,44%)]"
+                >
                   Password
                 </label>
                 <Link
@@ -88,7 +120,10 @@ export default function LoginPage() {
                 </Link>
               </div>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+                <Lock
+                  size={16}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]"
+                />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}

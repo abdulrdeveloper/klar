@@ -10,6 +10,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setisSubmitted] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -18,6 +19,17 @@ export default function ForgotPasswordPage() {
     setLoading(false);
     setisSubmitted(true);
   };
+
+const handleResend = async () => {
+  setCooldown(30);
+  await new Promise((res) => setTimeout(res, 1200));
+  const interval = setInterval(() => {
+    setCooldown((prev) => {
+      if (prev <= 1) { clearInterval(interval); return 0; }
+      return prev - 1;
+    });
+  }, 1000);
+};
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#0f1015] antialiased">
@@ -97,6 +109,23 @@ export default function ForgotPasswordPage() {
                   Please check your inbox. If you don't see it, check your <span className="text-white font-medium">spam folder</span>.
                 </p>
               </div>
+
+<button
+  onClick={handleResend}
+  disabled={cooldown > 0}
+  className="text-xs font-medium text-[hsl(228,6%,44%)] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center gap-1.5 mx-auto"
+>
+  {cooldown > 0 ? (
+    <span className="text-green-400">Sent! Resend in {cooldown}s</span>
+  ) : (
+    <>
+      Didn't receive it?{" "}
+      <span className="text-[hsl(38,100%,56%)] hover:brightness-125 transition-all">
+        Resend email
+      </span>
+    </>
+  )}
+</button>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-[hsl(228,8%,14%)]" />

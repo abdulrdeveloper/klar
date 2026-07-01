@@ -3,7 +3,17 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2, User, MessageCircle, MailCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  User,
+  MessageCircle,
+  MailCheck,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,29 +25,72 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
-    setSubmitted(true);
     setError("");
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      setSubmitted(true);
+      console.log("User registered successfully");
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setCooldown(30);
+    await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const interval = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f1015] px-4 sm:px-6 lg:px-8 antialiased">
-
       <button
         onClick={() => router.back()}
         className="absolute cursor-pointer top-6 left-6 group inline-flex items-center gap-2 text-sm font-medium text-[hsl(228,6%,44%)] hover:text-white transition-colors duration-200"
       >
-        <ArrowLeft size={16} className="transform group-hover:-translate-x-0.5 transition-transform" />
+        <ArrowLeft
+          size={16}
+          className="transform group-hover:-translate-x-0.5 transition-transform"
+        />
         Go Back
       </button>
 
       <div className="w-full max-w-md space-y-6">
-
         {!submitted && (
           <div className="text-center">
             <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
@@ -53,13 +106,18 @@ export default function RegisterPage() {
           {!submitted ? (
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
-
                 <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+                  <label
+                    htmlFor="name"
+                    className="text-xs font-medium text-[hsl(228,6%,44%)]"
+                  >
                     Full name
                   </label>
                   <div className="relative">
-                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+                    <User
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]"
+                    />
                     <input
                       id="name"
                       type="text"
@@ -67,17 +125,23 @@ export default function RegisterPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600 [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#0f1015_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
+                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all "
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="email" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+                  <label
+                    htmlFor="email"
+                    className="text-xs font-medium text-[hsl(228,6%,44%)]"
+                  >
                     Email
                   </label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+                    <Mail
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]"
+                    />
                     <input
                       id="email"
                       type="email"
@@ -85,17 +149,23 @@ export default function RegisterPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600 [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#0f1015_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
+                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all "
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="password" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+                  <label
+                    htmlFor="password"
+                    className="text-xs font-medium text-[hsl(228,6%,44%)]"
+                  >
                     Password
                   </label>
                   <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+                    <Lock
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]"
+                    />
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
@@ -104,7 +174,7 @@ export default function RegisterPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={8}
-                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600 [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#0f1015_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
+                      className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all "
                     />
                     <button
                       type="button"
@@ -163,10 +233,30 @@ export default function RegisterPage() {
                   Check your email
                 </h2>
                 <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
-                  We've sent a secure authentication link to <span className="text-white font-medium">{email}</span>.
-                  Click the link to verify and access your account.
+                  We've sent a secure authentication link to{" "}
+                  <span className="text-white font-medium">{email}</span>. Click
+                  the link to verify and access your account.
                 </p>
               </div>
+
+              <button
+                onClick={handleResend}
+                disabled={cooldown > 0}
+                className="text-xs font-medium text-[hsl(228,6%,44%)] transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none flex items-center gap-1.5 mx-auto"
+              >
+                {cooldown > 0 ? (
+                  <span className="text-green-400">
+                    Sent! Resend in {cooldown}s
+                  </span>
+                ) : (
+                  <>
+                    Didn't receive it?{" "}
+                    <span className="text-[hsl(38,100%,56%)] hover:brightness-125 transition-all">
+                      Resend email
+                    </span>
+                  </>
+                )}
+              </button>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-[hsl(228,8%,14%)]" />
@@ -178,11 +268,13 @@ export default function RegisterPage() {
                 onClick={() => setSubmitted(false)}
                 className="text-xs font-medium text-[hsl(228,6%,44%)] hover:brightness-110 transition-all"
               >
-                Wrong email? <span className="text-[hsl(38,100%,56%)] cursor-pointer hover:brightness-110 transition-all">Change it</span>
+                Wrong email?{" "}
+                <span className="text-[hsl(38,100%,56%)] cursor-pointer hover:brightness-110 transition-all">
+                  Change it
+                </span>
               </button>
             </div>
           )}
-
         </div>
 
         {!submitted && (
@@ -196,7 +288,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         )}
-
       </div>
     </div>
   );

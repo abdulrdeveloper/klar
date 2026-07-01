@@ -9,7 +9,7 @@ export default function Footer() {
       style={{ borderColor: "hsl(228,10%,13%)" }}
     >
       <div className="flex items-center gap-2.5">
-        <Image src="/klar.webp" alt="Klar logo" width={20} height={20} className="rounded" />
+        <Image src="/klar.png" alt="Klar logo" width={20} height={20} className="rounded" />
         <span className="text-xs" style={{ color: "hsl(228,6%,36%)" }}>
           © 2026 Klar
         </span>

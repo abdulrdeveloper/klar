@@ -23,7 +23,7 @@ export default function Navigation() {
       <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
         <div>
           <Image
-            src="/klar.webp"
+            src="/klar.png"
             alt="Klar logo"
             width={28}
             height={28}

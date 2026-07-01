@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: "Klar - AI Chat for Students",
   description: "Chat with 6 AI models for free. No credit card required.",
   icons: {
-    icon: "/klar.webp",
+    icon: "/klar.png",
   },
 };
 

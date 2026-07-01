@@ -12,6 +12,7 @@
     "@ai-sdk/groq": "^4.0.0",
     "@neondatabase/serverless": "^1.1.0",
     "ai": "^7.0.3",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "drizzle-orm": "1.0.0-rc.4",
     "jose": "^6.2.3",
@@ -19,7 +20,8 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "resend": "^6.16.0"
+    "resend": "^6.16.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

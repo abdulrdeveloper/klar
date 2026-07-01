@@ -17,6 +17,9 @@ importers:
       ai:
         specifier: ^7.0.3
         version: 7.0.3(zod@4.4.3)
+      bcryptjs:
+        specifier: ^3.0.3
+        version: 3.0.3
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -41,6 +44,9 @@ importers:
       resend:
         specifier: ^6.16.0
         version: 6.16.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -1113,6 +1119,10 @@ packages:
   baseline-browser-mapping@2.10.38:
     resolution: {integrity: sha512-31/02mVB4yuQU6adKk5SlY6m+mxDwUq5KZkyYgnLrrKl7TEm1+3PyDtDBz2kOv/wxZz41GHsvV1A/u6RmiyBvw==}
     engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
     hasBin: true
 
   brace-expansion@1.1.15:
@@ -3467,6 +3477,8 @@ snapshots:
   balanced-match@4.0.4: {}
 
   baseline-browser-mapping@2.10.38: {}
+
+  bcryptjs@3.0.3: {}
 
   brace-expansion@1.1.15:
     dependencies:
