@@ -44,7 +44,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push("/chat");
+        router.push("/dashboard");
       } else {
         setError(data.message || "Invalid email or password.");
         setLoading(false);

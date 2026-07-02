@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { registerSchema } from "@/lib/validation";
-import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { db } from "@/db";
 import { users, verifyTokens } from "@/db/schema";
@@ -9,59 +7,24 @@ import { Resend } from "resend";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const { email } = await req.json();
 
-    const parsedResult = registerSchema.safeParse(body);
-    if (!parsedResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Validation failed",
-          errors: parsedResult.error.flatten().fieldErrors,
-        },
-        { status: 400 },
-      );
-    }
-
-    const { name, email, password } = parsedResult.data;
-
-    const existingUser = await db
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
-    if (existingUser.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "An account with this email already exists",
-        },
-        { status: 409 },
-      );
+    if (!user || user.emailVerified) {
+      return NextResponse.json({ success: true });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        id: randomUUID(),
-        name: name,
-        email: email,
-        passwordHash: hashedPassword,
-      })
-      .returning({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      });
-
+    const name = user.name;
     const verifyToken = randomUUID();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await db.insert(verifyTokens).values({
-      userId: newUser.id,
+      userId: user.id,
       token: verifyToken,
       expiresAt,
     });
@@ -134,29 +97,16 @@ export async function POST(req: NextRequest) {
   </body>
   </html>`;
 
-await resend.emails.send({
-  from: "Klar <noreply@abdulrdeveloper.me>",
-  to: email,
-  subject: "Verify your Klar account",
-  html: emailHtml,
-  replyTo: "dev@abdulrdeveloper.me",
-});
+    await resend.emails.send({
+      from: "Klar <noreply@abdulrdeveloper.me>",
+      to: email,
+      subject: "Verify your Klar account",
+      html: emailHtml,
+      replyTo: "dev@abdulrdeveloper.me",
+    });
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Account created. Check your email to verify.",
-        userId: newUser.id,
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An error occurred",
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }

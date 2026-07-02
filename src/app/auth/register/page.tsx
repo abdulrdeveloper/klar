@@ -61,10 +61,10 @@ export default function RegisterPage() {
 
   const handleResend = async () => {
     setCooldown(30);
-    await fetch("/api/auth/register", {
+    await fetch("/api/auth/register/resend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ email }),
     });
     const interval = setInterval(() => {
       setCooldown((prev) => {
