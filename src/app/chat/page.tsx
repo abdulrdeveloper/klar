@@ -91,27 +91,15 @@ export default function ChatPage() {
         body: JSON.stringify({ messages: updatedMessages }),
       });
 
-      if (!response.ok || !response.body) {
-        setIsTyping(false);
-        setMessages([
-          ...updatedMessages,
-          {
-            role: "assistant",
-            content: "Something went wrong. Please try again.",
-          },
-        ]);
-        return;
-      }
-
       const text = await response.text();
-      setIsTyping(false);
       setMessages([...updatedMessages, { role: "assistant", content: text }]);
     } catch {
-      setIsTyping(false);
       setMessages([
         ...updatedMessages,
         { role: "assistant", content: "Network error. Check your connection." },
       ]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
@@ -153,8 +141,10 @@ export default function ChatPage() {
   const isEmpty = messages.length === 0 && !isTyping;
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full relative" style={{ backgroundColor: "#0f1015" }}>
-
+    <div
+      className="flex flex-col h-[100dvh] w-full relative"
+      style={{ backgroundColor: "#0f1015" }}
+    >
       <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
         <Link
           href="/"
@@ -320,7 +310,7 @@ export default function ChatPage() {
 
               {dropdownOpen && (
                 <div
-                  className="absolute bottom-full mb-2 left-0 rounded-xl overflow-hidden z-50 w-58"
+                  className="absolute bottom-full mb-2 left-0 rounded-xl overflow-hidden z-50 w-56"
                   style={{
                     backgroundColor: "#1a1d24",
                     border: "1px solid #2a2d34",
@@ -408,7 +398,6 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-      
     </div>
   );
 }
