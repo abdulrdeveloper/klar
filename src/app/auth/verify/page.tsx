@@ -35,7 +35,7 @@ function VerifyContent() {
 
         const data = await res.json();
 
-        if (res.ok || data.message) {
+        if (res.ok && data.success) {
           setStatus("success");
           setMessage(data.message || "Email verified successfully!");
           setTimeout(() => router.push("/dashboard"), 3000);
@@ -63,7 +63,9 @@ function VerifyContent() {
           className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center"
           style={{ background: "linear-gradient(135deg, #d4af37, #c47820)" }}
         >
-          {status === "loading" && <Loader2 size={30} color="#0f1015" className="animate-spin" />}
+          {status === "loading" && (
+            <Loader2 size={30} color="#0f1015" className="animate-spin" />
+          )}
           {status === "success" && <CheckCircle2 size={30} color="#0f1015" />}
           {status === "error" && <XCircle size={30} color="#0f1015" />}
         </div>
@@ -74,7 +76,10 @@ function VerifyContent() {
           {status === "error" && "Verification failed"}
         </h1>
 
-        <p style={{ color: "#9ca3af" }} className="mb-8 text-sm leading-relaxed">
+        <p
+          style={{ color: "#9ca3af" }}
+          className="mb-8 text-sm leading-relaxed"
+        >
           {message}
         </p>
 
@@ -86,7 +91,10 @@ function VerifyContent() {
             <Link
               href="/dashboard"
               className="inline-block w-full py-3 rounded-lg font-semibold text-sm"
-              style={{ background: "linear-gradient(135deg, #d4af37, #c47820)", color: "#0f1015" }}
+              style={{
+                background: "linear-gradient(135deg, #d4af37, #c47820)",
+                color: "#0f1015",
+              }}
             >
               Go to dashboard
             </Link>
@@ -98,7 +106,10 @@ function VerifyContent() {
             <Link
               href="/auth/register"
               className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm"
-              style={{ background: "linear-gradient(135deg, #d4af37, #c47820)", color: "#0f1015" }}
+              style={{
+                background: "linear-gradient(135deg, #d4af37, #c47820)",
+                color: "#0f1015",
+              }}
             >
               <Mail size={16} />
               Register again
@@ -106,7 +117,11 @@ function VerifyContent() {
             <Link
               href="/auth/login"
               className="inline-block w-full py-3 rounded-lg font-medium text-sm"
-              style={{ backgroundColor: "transparent", border: "1px solid #2a2d34", color: "#e5e7eb" }}
+              style={{
+                backgroundColor: "transparent",
+                border: "1px solid #2a2d34",
+                color: "#e5e7eb",
+              }}
             >
               Back to login
             </Link>
