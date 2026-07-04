@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Lock, Eye, EyeOff, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import Link from "next/link";
 
 function getStrength(password: string): { score: number; label: string; color: string; textColor: string } {
@@ -19,7 +19,9 @@ function getStrength(password: string): { score: number; label: string; color: s
   return { score: 4, label: "Strong", color: "bg-green-500", textColor: "text-green-500" };
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,6 +32,30 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
 
   const strength = getStrength(password);
+
+  if (!token) {
+    return (
+      <div className="text-center space-y-5">
+        <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+          <XCircle size={26} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            Invalid reset link
+          </h2>
+          <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
+            This link is missing or invalid. Please request a new password reset.
+          </p>
+        </div>
+        <Link
+          href="/auth/forgot-password"
+          className="inline-block w-full py-2.5 rounded-xl bg-gradient-to-r from-[hsl(38,100%,58%)] to-[hsl(20,95%,55%)] text-black font-semibold text-sm text-center"
+        >
+          Request new link
+        </Link>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -47,155 +73,172 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
-    setDone(true);
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setDone(true);
+      } else {
+        setError(data.message || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
+    <>
+      {!done ? (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="password" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+              New password
+            </label>
+            <div className="relative">
+              <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)] hover:text-white transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {password.length > 0 && (
+              <div className="space-y-1 pt-1">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                        i <= strength.score ? strength.color : "bg-[hsl(228,8%,14%)]"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-[hsl(228,6%,44%)]">
+                  Strength:{" "}
+                  <span
+                    className={`font-medium ${
+                      strength.score > 0 ? strength.textColor : "text-[hsl(228,6%,44%)]" }`} >
+                    {strength.label}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="confirmPassword" className="text-xs font-medium text-[hsl(228,6%,44%)]">
+              Confirm password
+            </label>
+            <div className="relative">
+              <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
+              <input
+                id="confirmPassword"
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)] hover:text-white transition-colors cursor-pointer"
+              >
+                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {confirmPassword.length > 0 && (
+              <p className={`text-xs pt-0.5 ${password === confirmPassword ? "text-green-400" : "text-red-400"}`}>
+                {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords don't match"}
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs text-center font-medium">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(38,100%,58%)] to-[hsl(20,95%,55%)] text-black font-semibold text-sm shadow-[0_0_50px_-10px_hsla(38,100%,56%,0.4)] hover:brightness-110 transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Updating...
+              </>
+            ) : (
+              "Update Password"
+            )}
+          </button>
+        </form>
+      ) : (
+        <div className="text-center space-y-5">
+          <div className="mx-auto w-14 h-14 rounded-full bg-[hsl(38,100%,56%)]/10 border border-[hsl(38,100%,56%)]/20 flex items-center justify-center text-[hsl(38,100%,56%)]">
+            <ShieldCheck size={26} />
+          </div>
+
+          <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
+            Your password has been updated successfully. Sign in to continue.
+          </p>
+
+          <Link
+            href="/auth/login"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[hsl(38,100%,58%)] to-[hsl(20,95%,55%)] text-black font-semibold text-sm shadow-[0_0_50px_-10px_hsla(38,100%,56%,0.4)] hover:brightness-110 transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            Go to Sign in
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#0f1015] antialiased">
-
       <div className="w-full max-w-md space-y-6">
-
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            {done ? "Password updated" : "Set new password"}
+            Set new password
           </h1>
           <p className="mt-2 text-sm text-[hsl(228,6%,44%)]">
-            {done
-              ? "You can now sign in with your new password."
-              : "Choose a strong password for your account."}
+            Choose a strong password for your account.
           </p>
         </div>
 
         <div className="border border-[hsl(228,8%,14%)] bg-white/[0.02] rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-xl">
-
-          {!done ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              <div className="space-y-1.5">
-                <label htmlFor="password" className="text-xs font-medium text-[hsl(228,6%,44%)]">
-                  New password
-                </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)] hover:text-white transition-colors cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                {password.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                            i <= strength.score ? strength.color : "bg-[hsl(228,8%,14%)]"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-[hsl(228,6%,44%)]">
-                      Strength:{" "}
-                      <span
-                        className={`font-medium ${
-                          strength.score > 0 ? strength.textColor : "text-[hsl(228,6%,44%)]" }`} >
-                        {strength.label}
-                      </span>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="confirmPassword" className="text-xs font-medium text-[hsl(228,6%,44%)]">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)]" />
-                  <input
-                    id="confirmPassword"
-                    type={showConfirm ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="w-full bg-[#0f1015] border border-[hsl(228,8%,14%)] text-white pl-10 pr-10 py-2.5 rounded-xl text-sm focus:border-[hsl(38,100%,56%)] focus:ring-1 focus:ring-[hsla(38,100%,56%,0.2)] outline-none transition-all placeholder:text-zinc-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(228,6%,44%)] hover:text-white transition-colors cursor-pointer"
-                  >
-                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                {confirmPassword.length > 0 && (
-                  <p className={`text-xs pt-0.5 ${password === confirmPassword ? "text-green-400" : "text-red-400"}`}>
-                    {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords don't match"}
-                  </p>
-                )}
-              </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs text-center font-medium">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(38,100%,58%)] to-[hsl(20,95%,55%)] text-black font-semibold text-sm shadow-[0_0_50px_-10px_hsla(38,100%,56%,0.4)] hover:brightness-110 transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update Password"
-                )}
-              </button>
-            </form>
-
-          ) : (
-
-<div className="text-center space-y-5">
-              <div className="mx-auto w-14 h-14 rounded-full bg-[hsl(38,100%,56%)]/10 border border-[hsl(38,100%,56%)]/20 flex items-center justify-center text-[hsl(38,100%,56%)]">
-                <ShieldCheck size={26} />
-              </div>
-
-              <p className="text-sm text-[hsl(228,6%,44%)] leading-relaxed">
-                Your password has been updated successfully. Sign in to continue.
-              </p>
-
-              <Link
-                href="/auth/login"
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[hsl(38,100%,58%)] to-[hsl(20,95%,55%)] text-black font-semibold text-sm shadow-[0_0_50px_-10px_hsla(38,100%,56%,0.4)] hover:brightness-110 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                Go to Sign in
-              </Link>
-            </div>
-          )}
+          <Suspense fallback={null}>
+            <ResetPasswordContent />
+          </Suspense>
         </div>
-
       </div>
     </div>
   );

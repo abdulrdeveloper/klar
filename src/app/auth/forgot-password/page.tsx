@@ -12,17 +12,35 @@ export default function ForgotPasswordPage() {
   const [isSubmitted, setisSubmitted] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
-    setisSubmitted(true);
-  };
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    await fetch("/api/auth/forget-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  } catch {
+  }
+
+  setLoading(false);
+  setisSubmitted(true);
+};
 
 const handleResend = async () => {
   setCooldown(30);
-  await new Promise((res) => setTimeout(res, 1200));
+
+  try {
+    await fetch("/api/auth/forget-password/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  } catch {
+  }
+
   const interval = setInterval(() => {
     setCooldown((prev) => {
       if (prev <= 1) { clearInterval(interval); return 0; }

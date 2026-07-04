@@ -9,13 +9,6 @@ export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    if (!email || typeof email !== "string") {
-      return NextResponse.json(
-        { success: false, message: "Email is required" },
-        { status: 400 },
-      );
-    }
-
     const [user] = await db
       .select()
       .from(users)
@@ -90,11 +83,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Forget password error:", error);
-    return NextResponse.json(
-      { success: false, message: "An error occurred" },
-      { status: 500 },
-    );
+  } catch {
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }
