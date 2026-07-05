@@ -42,16 +42,13 @@ const MODELS: Model[] = [
   { id: "deep", name: "Deep", description: "Long-form, thorough analysis.", badge: "Research" },
 ];
 
-// TODO: replace with real auth user
-const currentUser = {
-  name: "Ali Khan",
-  email: "ali@example.com",
-};
-
 const GOLD = "linear-gradient(135deg, #d4af37, #c47820)";
 
 export default function DashboardPage() {
   const router = useRouter();
+
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [chats, setChats] = useState<Chat[]>([
     { id: "c1", title: "New chat", messages: [] },
@@ -73,7 +70,7 @@ export default function DashboardPage() {
   const modelRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
-  const firstLetter = (currentUser.name.trim().charAt(0) || "U").toUpperCase();
+  const firstLetter = (currentUser?.name.trim().charAt(0) || "U").toUpperCase();
 
   const updateActiveChat = (updater: (c: Chat) => Chat) => {
     setChats((prev) => prev.map((c) => (c.id === activeChatId ? updater(c) : c)));
@@ -124,6 +121,23 @@ export default function DashboardPage() {
     }
   };
 
+  useEffect(() => {
+  fetch("/api/me")
+    .then((res) => {
+      if (!res.ok) throw new Error("Not authenticated");
+      return res.json();
+    })
+    .then((data) => {
+      setCurrentUser(data.user);
+      setCheckingAuth(false);
+    })
+    .catch(() => {
+      router.push("/auth/login");
+    });
+}, [router]);
+
+
+
   const handleNewChat = () => {
     const id = `c${Date.now()}`;
     setChats((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
@@ -145,11 +159,11 @@ export default function DashboardPage() {
     });
   };
 
-  const handleLogout = () => {
-    // TODO: hook up real logout
-    router.push("/auth/login");
-  };
-
+  const handleLogout = async () => {
+  await fetch("/api/auth/logout", { method: "POST" });
+  router.push("/auth/login");
+};
+  
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -172,9 +186,16 @@ export default function DashboardPage() {
 
   const isEmpty = messages.length === 0 && !isTyping;
 
+  if (checkingAuth || !currentUser) {
+  return (
+    <div className="flex h-[100dvh] w-full items-center justify-center" style={{ backgroundColor: "#0f1015" }}>
+      <Bot size={32} color="#d4af37" className="animate-pulse" />
+    </div>
+  );
+}
+
   return (
     <div className="flex h-[100dvh] w-full" style={{ backgroundColor: "#0f1015" }}>
-      {/* Sidebar overlay on mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 md:hidden"
@@ -183,14 +204,12 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed md:static top-0 left-0 z-40 h-full w-64 flex flex-col transition-transform duration-200 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
         style={{ backgroundColor: "#12141b", borderRight: "1px solid #2a2d34" }}
       >
-        {/* Brand */}
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <div
@@ -200,7 +219,7 @@ export default function DashboardPage() {
               <Bot size={16} color="#0f1015" />
             </div>
             <span className="text-sm font-semibold" style={{ color: "#e5e7eb" }}>
-              Aria AI
+              Klar AI
             </span>
           </div>
           <button
@@ -211,7 +230,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* New chat */}
         <div className="px-3">
           <button
             onClick={handleNewChat}
@@ -223,7 +241,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* History */}
         <div className="px-3 pt-5 pb-2 text-[11px] uppercase tracking-wider" style={{ color: "#6b7280" }}>
           History
         </div>
@@ -270,7 +287,6 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Sidebar footer user card */}
         <div
           className="px-3 py-3"
           style={{ borderTop: "1px solid #2a2d34" }}
@@ -284,19 +300,17 @@ export default function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-medium truncate" style={{ color: "#e5e7eb" }}>
-                {currentUser.name}
+                {currentUser?.name}
               </div>
               <div className="text-[11px] truncate" style={{ color: "#6b7280" }}>
-                {currentUser.email}
+                {currentUser?.email}
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Top bar */}
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{ borderBottom: "1px solid #1a1d24" }}
@@ -309,7 +323,6 @@ export default function DashboardPage() {
               <Menu size={16} color="#9ca3af" />
             </button>
 
-            {/* Model selector (top) */}
             <div className="relative" ref={modelRef}>
               <button
                 onClick={() => setModelOpen((p) => !p)}
@@ -383,7 +396,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* User avatar */}
           <div className="relative" ref={userRef}>
             <button
               onClick={() => setUserMenuOpen((p) => !p)}
@@ -409,23 +421,12 @@ export default function DashboardPage() {
               >
                 <div className="px-3 py-3" style={{ borderBottom: "1px solid #2a2d34" }}>
                   <div className="text-xs font-semibold" style={{ color: "#e5e7eb" }}>
-                    {currentUser.name}
+                    {currentUser?.name}
                   </div>
                   <div className="text-[11px] mt-0.5" style={{ color: "#6b7280" }}>
-                    {currentUser.email}
+                    {currentUser?.email}
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    router.push("/settings");
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-[#22252e]"
-                  style={{ color: "#e5e7eb" }}
-                >
-                  <Settings size={13} color="#9ca3af" />
-                  Settings
-                </button>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-[#22252e]"
@@ -439,7 +440,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Chat area */}
         <div className="flex-1 overflow-y-auto">
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center h-full px-4 gap-8">
@@ -452,7 +452,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-center">
                   <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "#e5e7eb" }}>
-                    Welcome back, {currentUser.name.split(" ")[0]}
+                    Welcome back, {currentUser?.name.split(" ")[0]}
                   </h1>
                   <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
                     Pick a model and start a new conversation.
