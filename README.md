@@ -29,6 +29,7 @@ git clone https://github.com/abdulrdeveloper/klar.git
 cd klar
 ```
 
+
 2. Install dependencies
 
 ```bash
