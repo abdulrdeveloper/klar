@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SignJWT } from "jose";
 import { db } from "@/db";
 import { users, verifyTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+const secret = process.env.JWT_SECRET;
+if (!secret) throw new Error("JWT_SECRET is missing");
+const JWT_SECRET = new TextEncoder().encode(secret);
+
 export async function POST(req: NextRequest) {
-    try{
+  try {
     const { token } = await req.json();
 
-     if (!token || typeof token !== "string") {
+    if (!token || typeof token !== "string") {
       return NextResponse.json(
         { success: false, message: "Invalid or missing token." },
         { status: 400 },
@@ -27,37 +32,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-       if (record.used) {
+    if (record.used) {
       return NextResponse.json(
         { success: false, message: "This link has already been used" },
         { status: 400 },
       );
     }
 
-     if (record.expiresAt.getTime() < Date.now()) {
+    if (record.expiresAt.getTime() < Date.now()) {
       return NextResponse.json(
         { success: false, message: "This link has expired. Please request a new one." },
         { status: 400 },
       );
     }
 
-    await db
+    const [user] = await db
       .update(users)
       .set({ emailVerified: true, updatedAt: new Date() })
-      .where(eq(users.id, record.userId));
+      .where(eq(users.id, record.userId))
+      .returning({ id: users.id, email: users.email });
 
-      await db
+    await db
       .update(verifyTokens)
       .set({ used: true, updatedAt: new Date() })
       .where(eq(verifyTokens.id, record.id));
 
-    return NextResponse.json({
-      success: true,
-      message: "Email verified successfully"},
-      {status: 200},
+    const jwt = await new SignJWT({ userId: user.id, userEmail: user.email })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(JWT_SECRET);
+
+    const response = NextResponse.json(
+      { success: true, message: "Email verified successfully" },
+      { status: 200 },
     );
-  }
-   catch (error) {
+
+    response.cookies.set("session", jwt, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+
+    return response;
+  } catch (error) {
     console.error("Verify error:", error);
     return NextResponse.json(
       { success: false, message: "An error occurred during verification" },

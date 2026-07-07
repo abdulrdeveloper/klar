@@ -38,7 +38,7 @@ function VerifyContent() {
         if (res.ok && data.success) {
           setStatus("success");
           setMessage(data.message || "Email verified successfully!");
-          setTimeout(() => router.push("/dashboard"), 3000);
+          setTimeout(() => router.push("/dashboard"), 1700);
         } else {
           setStatus("error");
           setMessage(data.message || "Verification failed.");
@@ -86,18 +86,8 @@ function VerifyContent() {
         {status === "success" && (
           <>
             <p style={{ color: "#6b7280" }} className="text-xs mb-4">
-              Redirecting to dashboard in 3 seconds...
+              Redirecting to dashboard...
             </p>
-            <Link
-              href="/dashboard"
-              className="inline-block w-full py-3 rounded-lg font-semibold text-sm"
-              style={{
-                background: "linear-gradient(135deg, #d4af37, #c47820)",
-                color: "#0f1015",
-              }}
-            >
-              Go to dashboard
-            </Link>
           </>
         )}
 

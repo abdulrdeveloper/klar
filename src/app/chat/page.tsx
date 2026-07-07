@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Bot, ChevronDown, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { revealWords } from "@/lib/typewriter";
 
 type Message = {
   role: "user" | "assistant";
@@ -67,6 +68,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
@@ -75,7 +77,7 @@ export default function ChatPage() {
   const router = useRouter();
 
   const handleSendMessage = async () => {
-    if (input.trim() === "") return;
+    if (input.trim() === "" || isTyping || isRevealing) return;
 
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
@@ -92,7 +94,16 @@ export default function ChatPage() {
       });
 
       const text = await response.text();
-      setMessages([...updatedMessages, { role: "assistant", content: text }]);
+      setIsTyping(false);
+      setIsRevealing(true);
+      setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+
+      await revealWords(text, (visibleText) => {
+        setMessages([
+          ...updatedMessages,
+          { role: "assistant", content: visibleText },
+        ]);
+      });
     } catch {
       setMessages([
         ...updatedMessages,
@@ -100,6 +111,7 @@ export default function ChatPage() {
       ]);
     } finally {
       setIsTyping(false);
+      setIsRevealing(false);
     }
   };
 
@@ -190,7 +202,7 @@ export default function ChatPage() {
                   What can I help you with?
                 </h1>
                 <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
-                  Ask me anything — I'm here to help.
+                  Ask me anything — I&apos;m here to help.
                 </p>
               </div>
             </div>
@@ -389,7 +401,7 @@ export default function ChatPage() {
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isTyping || isRevealing}
               className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
               style={{ backgroundColor: "#d4af37" }}
             >

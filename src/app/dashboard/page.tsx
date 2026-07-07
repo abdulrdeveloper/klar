@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { revealWords } from "@/lib/typewriter";
 
 type Message = {
   role: "user" | "assistant";
@@ -59,6 +60,7 @@ export default function DashboardPage() {
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
@@ -77,7 +79,7 @@ export default function DashboardPage() {
   };
 
   const handleSendMessage = async () => {
-    if (input.trim() === "") return;
+    if (input.trim() === "" || isTyping || isRevealing) return;
 
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
@@ -108,16 +110,27 @@ export default function DashboardPage() {
 
       const text = await response.text();
       setIsTyping(false);
+      setIsRevealing(true);
       updateActiveChat((c) => ({
         ...c,
-        messages: [...updatedMessages, { role: "assistant", content: text }],
+        messages: [...updatedMessages, { role: "assistant", content: "" }],
       }));
+
+      await revealWords(text, (visibleText) => {
+        updateActiveChat((c) => ({
+          ...c,
+          messages: [...updatedMessages, { role: "assistant", content: visibleText }],
+        }));
+      });
     } catch {
       setIsTyping(false);
       updateActiveChat((c) => ({
         ...c,
         messages: [...updatedMessages, { role: "assistant", content: "Network error. Check your connection." }],
       }));
+    } finally {
+      setIsTyping(false);
+      setIsRevealing(false);
     }
   };
 
@@ -542,7 +555,7 @@ export default function DashboardPage() {
               </span>
               <button
                 onClick={handleSendMessage}
-                disabled={!input.trim()}
+                disabled={!input.trim() || isTyping || isRevealing}
                 className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
                 style={{ backgroundColor: "#d4af37" }}
               >
