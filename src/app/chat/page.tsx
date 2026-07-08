@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowUp, Bot, ChevronDown, Lock } from "lucide-react";
+import { ArrowUp, Bot, ChevronDown, Lock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { revealWords } from "@/lib/typewriter";
@@ -72,6 +72,7 @@ export default function ChatPage() {
   const [isRevealing, setIsRevealing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sendingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
@@ -83,18 +84,21 @@ export default function ChatPage() {
     if (input.trim() === "" || isTyping || isRevealing || sendingRef.current) return;
 
     sendingRef.current = true;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setErrorMessage(null);
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
 
     setMessages(updatedMessages);
-    setInput("")
+    setInput("");
     setIsTyping(true);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ messages: updatedMessages, model: selectedModel.id }),
       });
 
@@ -117,8 +121,12 @@ export default function ChatPage() {
           ...updatedMessages,
           { role: "assistant", content: visibleText },
         ]);
-      });
+      }, { signal: controller.signal });
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
       const message = error instanceof Error ? error.message : "Network error. Check your connection.";
       setErrorMessage(message);
       setMessages([
@@ -129,7 +137,12 @@ export default function ChatPage() {
       setIsTyping(false);
       setIsRevealing(false);
       sendingRef.current = false;
+      abortControllerRef.current = null;
     }
+  };
+
+  const handleStopGeneration = () => {
+    abortControllerRef.current?.abort();
   };
 
   useEffect(() => {
@@ -423,14 +436,19 @@ export default function ChatPage() {
                 </div>
               )}
             </div>
-            <button
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isTyping || isRevealing}
-              className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
-              style={{ backgroundColor: "#d4af37" }}
-            >
-              <ArrowUp size={16} color="#0f1015" />
-            </button>
+              <button
+                onClick={isTyping || isRevealing ? handleStopGeneration : handleSendMessage}
+                disabled={!input.trim() && !isTyping && !isRevealing}
+                className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
+                style={{ backgroundColor: isTyping || isRevealing ? "#2a2d34" : "#d4af37" }}
+                aria-label={isTyping || isRevealing ? "Stop generation" : "Send message"}
+              >
+                {isTyping || isRevealing ? (
+                  <X size={16} color="#e5e7eb" />
+                ) : (
+                  <ArrowUp size={16} color="#0f1015" />
+                )}
+              </button>
           </div>
         </div>
       </div>
