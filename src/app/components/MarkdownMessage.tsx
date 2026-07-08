@@ -3,8 +3,6 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Check, Copy } from "lucide-react";
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
@@ -19,22 +17,18 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   return (
     <div className="my-2 overflow-hidden rounded-xl border" style={{ borderColor: "#2a2d34" }}>
       <div
-        className="flex items-center justify-between px-3 py-1.5 text-xs"
+        className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs"
         style={{ backgroundColor: "#111318", color: "#9ca3af" }}
       >
-        <span>{language || "text"}</span>
-        <button onClick={handleCopy} className="flex items-center gap-1 transition-colors hover:text-white">
+        <span className="truncate">{language || "text"}</span>
+        <button onClick={handleCopy} className="flex shrink-0 items-center gap-1 transition-colors hover:text-white">
           {copied ? <Check size={12} /> : <Copy size={12} />}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <SyntaxHighlighter
-        language={language || "text"}
-        style={oneDark}
-        customStyle={{ margin: 0, padding: "12px", fontSize: "13px", background: "#0f1015" }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      <pre className="overflow-x-auto bg-[#0f1015] px-3 py-3 text-[13px] leading-relaxed text-[#e5e7eb]">
+        <code>{code}</code>
+      </pre>
     </div>
   );
 }

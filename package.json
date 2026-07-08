@@ -23,7 +23,6 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
-    "react-syntax-highlighter": "^16.1.1",
     "remark-gfm": "^4.0.1",
     "resend": "^6.16.0",
     "zod": "^4.4.3"
