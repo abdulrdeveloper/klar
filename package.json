@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.6",
     "@ai-sdk/groq": "^4.0.0",
+    "@ai-sdk/mistral": "^4.0.5",
     "@neondatabase/serverless": "^1.1.0",
     "ai": "^7.0.3",
     "bcryptjs": "^3.0.3",
@@ -21,6 +22,9 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.16.0",
     "zod": "^4.4.3"
   },

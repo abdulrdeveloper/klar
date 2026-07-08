@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { revealWords } from "@/lib/typewriter";
+import MarkdownMessage from "@/app/components/MarkdownMessage";
 
 type Message = {
   role: "user" | "assistant";
@@ -494,10 +495,10 @@ export default function DashboardPage() {
                       <Bot size={13} color="#0f1015" />
                     </div>
                     <div
-                      className="max-w-[72%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm leading-relaxed whitespace-pre-wrap"
+                      className="max-w-[72%] rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed"
                       style={{ backgroundColor: "#1a1d24", color: "#e5e7eb" }}
                     >
-                      {msg.content}
+                      <MarkdownMessage content={msg.content} />
                     </div>
                   </div>
                 ),

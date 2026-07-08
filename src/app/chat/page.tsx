@@ -5,6 +5,7 @@ import { ArrowUp, Bot, ChevronDown, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { revealWords } from "@/lib/typewriter";
+import MarkdownMessage from "@/app/components/MarkdownMessage";
 
 type Message = {
   role: "user" | "assistant";
@@ -69,6 +70,8 @@ export default function ChatPage() {
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const sendingRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
@@ -77,21 +80,32 @@ export default function ChatPage() {
   const router = useRouter();
 
   const handleSendMessage = async () => {
-    if (input.trim() === "" || isTyping || isRevealing) return;
+    if (input.trim() === "" || isTyping || isRevealing || sendingRef.current) return;
 
+    sendingRef.current = true;
+    setErrorMessage(null);
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
 
     setMessages(updatedMessages);
-    setInput("");
+    setInput("")
     setIsTyping(true);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, model: selectedModel.id }),
       });
+
+      if (!response.ok) {
+        const fallbackMessage =
+          response.status === 503
+            ? "Chat service is unavailable right now. Please try again in a moment."
+            : "Something went wrong. Please try again.";
+        const responseText = await response.text().catch(() => "");
+        throw new Error(responseText.trim() || fallbackMessage);
+      }
 
       const text = await response.text();
       setIsTyping(false);
@@ -104,14 +118,17 @@ export default function ChatPage() {
           { role: "assistant", content: visibleText },
         ]);
       });
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Network error. Check your connection.";
+      setErrorMessage(message);
       setMessages([
         ...updatedMessages,
-        { role: "assistant", content: "Network error. Check your connection." },
+        { role: "assistant", content: message },
       ]);
     } finally {
       setIsTyping(false);
       setIsRevealing(false);
+      sendingRef.current = false;
     }
   };
 
@@ -182,6 +199,13 @@ export default function ChatPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {errorMessage ? (
+          <div className="fixed bottom-[92px] left-1/2 z-20 w-[min(92vw,36rem)] -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg"
+            style={{ backgroundColor: "#2a1d1d", borderColor: "#5c2b2b", color: "#fecaca" }}
+          >
+            {errorMessage}
+          </div>
+        ) : null}
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full px-4 gap-8">
             <div className="flex flex-col items-center gap-3">
@@ -233,10 +257,10 @@ export default function ChatPage() {
                     <Bot size={13} color="#0f1015" />
                   </div>
                   <div
-                    className="max-w-[72%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm leading-relaxed whitespace-pre-wrap"
+                    className="max-w-[72%] rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed"
                     style={{ backgroundColor: "#1a1d24", color: "#e5e7eb" }}
                   >
-                    {msg.content}
+                    <MarkdownMessage content={msg.content} />
                   </div>
                 </div>
               ),
