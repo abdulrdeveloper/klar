@@ -33,6 +33,7 @@ type Chat = {
   id: string;
   title: string;
   messages: Message[];
+  conversationId: string | null;
 };
 
 const MODELS: Model[] = [
@@ -53,7 +54,7 @@ export default function DashboardPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [chats, setChats] = useState<Chat[]>([
-    { id: "c1", title: "New chat", messages: [] },
+    { id: "c1", title: "New chat", messages: [], conversationId: null },
   ]);
   const [activeChatId, setActiveChatId] = useState<string>("c1");
   const activeChat = chats.find((c) => c.id === activeChatId) ?? chats[0];
@@ -101,7 +102,11 @@ export default function DashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
-        body: JSON.stringify({ messages: updatedMessages, model: selectedModel.id }),
+        body: JSON.stringify({
+          messages: updatedMessages,
+          model: selectedModel.id,
+          conversationId: activeChat.conversationId ?? undefined,
+        }),
       });
 
       if (!response.ok || !response.body) {
@@ -114,6 +119,18 @@ export default function DashboardPage() {
       }
 
       const text = await response.text();
+      const serverConversationId = response.headers.get("X-Conversation-Id");
+
+      if (serverConversationId) {
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === activeChatId
+              ? { ...chat, conversationId: serverConversationId }
+              : chat,
+          ),
+        );
+      }
+
       setIsTyping(false);
       setIsRevealing(true);
       updateActiveChat((c) => ({
@@ -163,27 +180,69 @@ export default function DashboardPage() {
     });
 }, [router]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const loadConversations = async () => {
+      try {
+        const res = await fetch("/api/conversations");
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        if (data.conversations && data.conversations.length > 0) {
+          const loadedChats: Chat[] = data.conversations.map(
+            (conv: { id: string; title: string }) => ({
+              id: conv.id,
+              title: conv.title,
+              messages: [],
+              conversationId: conv.id,
+            }),
+          );
+
+          setChats(loadedChats);
+          setActiveChatId(loadedChats[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to load conversations", error);
+      }
+    };
+
+    loadConversations();
+  }, [currentUser]);
+
 
 
   const handleNewChat = () => {
     const id = `c${Date.now()}`;
-    setChats((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
+    setChats((prev) => [{ id, title: "New chat", messages: [], conversationId: null }, ...prev]);
     setActiveChatId(id);
     setSidebarOpen(false);
   };
 
   const handleDeleteChat = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setChats((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      if (next.length === 0) {
-        const fresh = { id: `c${Date.now()}`, title: "New chat", messages: [] };
-        setActiveChatId(fresh.id);
-        return [fresh];
-      }
-      if (id === activeChatId) setActiveChatId(next[0].id);
-      return next;
-    });
+
+    fetch(`/api/conversations/${id}`, { method: "DELETE" })
+      .then((res) => {
+        if (!res.ok) return;
+        setChats((prev) => {
+          const next = prev.filter((c) => c.id !== id);
+          if (next.length === 0) {
+            const fresh = {
+              id: `c${Date.now()}`,
+              title: "New chat",
+              messages: [],
+              conversationId: null,
+            };
+            setActiveChatId(fresh.id);
+            return [fresh];
+          }
+          if (id === activeChatId) setActiveChatId(next[0].id);
+          return next;
+        });
+      })
+      .catch(() => {});
   };
 
   const handleLogout = async () => {
@@ -277,9 +336,34 @@ export default function DashboardPage() {
             return (
               <div
                 key={chat.id}
-                onClick={() => {
+                onClick={async () => {
                   setActiveChatId(chat.id);
                   setSidebarOpen(false);
+
+                  if (
+                    chat.conversationId &&
+                    chat.messages.length === 0
+                  ) {
+                    try {
+                      const res = await fetch(
+                        `/api/conversations/${chat.conversationId}`,
+                      );
+                      if (!res.ok) return;
+
+                      const data = await res.json();
+                      if (data.messages) {
+                        setChats((prev) =>
+                          prev.map((c) =>
+                            c.id === chat.id
+                              ? { ...c, messages: data.messages }
+                              : c,
+                          ),
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Failed to load messages", error);
+                    }
+                  }
                 }}
                 className="group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors"
                 style={{

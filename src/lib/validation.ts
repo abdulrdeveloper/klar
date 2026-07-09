@@ -5,14 +5,11 @@ export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
- 
-
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
-
 
 export const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -20,6 +17,13 @@ export const chatMessageSchema = z.object({
 });
 
 export const chatRequestSchema = z.object({
+  conversationId: z.string().uuid().optional(),
+  messages: z.array(chatMessageSchema).min(1),
+  model: z.string().min(1).optional(),
+});
+
+export const chatResponseSchema = z.object({
+  conversationId: z.string().min(1),
   messages: z.array(chatMessageSchema).min(1),
   model: z.string().min(1).optional(),
 });
@@ -28,3 +32,4 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ChatMessageInput = z.infer<typeof chatMessageSchema>;
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;
+export type ChatResponseInput = z.infer<typeof chatResponseSchema>;
