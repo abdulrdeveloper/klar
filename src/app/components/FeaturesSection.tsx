@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  MessageSquare,
-  Save,
-  Brain,
-  Code,
-  Lock,
-  Zap,
-} from "lucide-react";
+import { MessageSquare, Save, Brain, Code, Lock, Zap } from "lucide-react";
 
 const FEATURES = [
   {
@@ -38,7 +31,7 @@ const FEATURES = [
   {
     icon: Zap,
     title: "Unlimited per day",
-    desc: "No daily cap — send as many messages as you need. Rate limited to 20/min to keep things fair.",
+    desc: "No daily cap — send as many messages as you need.",
   },
 ];
 
@@ -47,10 +40,16 @@ export default function FeaturesSection() {
     <section id="features" className="py-16 px-5">
       <div className="max-w-5xl mx-auto">
         <div className="mb-10 text-center">
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "hsl(38, 100%, 56%)" }}>
+          <p
+            className="text-xs uppercase tracking-widest mb-2"
+            style={{ color: "hsl(38, 100%, 56%)" }}
+          >
             Features
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>
+          <h2
+            className="text-2xl sm:text-3xl font-bold"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
             Everything you need, nothing you don&apos;t
           </h2>
         </div>
@@ -69,7 +68,10 @@ export default function FeaturesSection() {
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-                  style={{ background: "hsla(38,100%,56%,0.1)", color: "hsl(38,100%,58%)" }}
+                  style={{
+                    background: "hsla(38,100%,56%,0.1)",
+                    color: "hsl(38,100%,58%)",
+                  }}
                 >
                   <Icon size={16} />
                 </div>
@@ -82,7 +84,10 @@ export default function FeaturesSection() {
                 >
                   {feature.title}
                 </h3>
-                <p className="text-xs leading-relaxed" style={{ color: "hsl(228,6%,44%)" }}>
+                <p
+                  className="text-xs leading-relaxed"
+                  style={{ color: "hsl(228,6%,44%)" }}
+                >
                   {feature.desc}
                 </p>
               </div>

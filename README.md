@@ -1,24 +1,38 @@
-# Klar — AI Tutor for Students
+# Klar
 
-Klar is a free AI tutor for students. Chat instantly without any login, or sign up to unlock all models and save your conversations.
+Klar is an AI tutor for students. You can chat without login, or create an account to unlock saved conversations, verification-based auth, and the full dashboard experience.
 
-## Features
+Live site: https://klar.abdulrdeveloper.me
 
-- No signup required — start chatting with Flash instantly
-- 6 AI models — Flash, Smart, Thinking, Speed, Coder, Deep
-- Persistent chat history for logged-in users
-- Supports Roman Urdu, English, and Urdu script
-- Pakistani exam prep — MDCAT, ECAT, FSc, Matric, O/A Levels
-- Fully responsive, mobile friendly
-- Dark theme with gold accent
+## What It Does
+
+- Instant chat without signup
+- 6 model modes: Flash, Smart, Thinking, Speed, Coder, Deep
+- Logged-in chat history with per-conversation storage
+- Email verification, login, logout, forgot-password, and reset-password flows
+- Supports English, Roman Urdu, and Urdu script
+- Built for school prep, coding help, and fast explanations
 
 ## Tech Stack
 
 - Next.js 16
+- React 19
 - TypeScript
 - Tailwind CSS v4
 - Vercel AI SDK
-- Groq API
+- Drizzle ORM + PostgreSQL
+- Groq + Mistral model routing
+- Resend for transactional email
+- JWT session cookies
+
+## Project Structure
+
+- `src/app/page.tsx` - landing page
+- `src/app/dashboard/page.tsx` - chat dashboard
+- `src/app/auth/*` - auth screens
+- `src/app/api/*` - auth, chat, me, and conversation routes
+- `src/lib/*` - auth, validation, and chat runtime logic
+- `src/db/*` - database connection and schema
 
 ## Getting Started
 
@@ -29,17 +43,20 @@ git clone https://github.com/abdulrdeveloper/klar.git
 cd klar
 ```
 
-
 2. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-3. Create a `.env.local` file in the root and add your Groq API key
+3. Create a `.env.local` file in the project root
 
 ```bash
-GROQ_API_KEY=your_groq_api_key_here
+DATABASE_URL=your_postgres_connection_string
+JWT_SECRET=your_long_random_secret
+GROQ_API_KEY=your_groq_api_key
+MISTRAL_API_KEY=your_mistral_api_key
+RESEND_API_KEY=your_resend_api_key
 ```
 
 4. Run the development server
@@ -50,12 +67,12 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Useful Notes
 
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| GROQ_API_KEY | Your Groq API key from console.groq.com |
+- Dashboard routes are protected by middleware.
+- Logged-in conversations are stored in PostgreSQL.
+- Chat generation falls back across providers based on the selected mode.
+- Email verification is required before login completes.
 
 ## License
 

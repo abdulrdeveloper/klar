@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     setLoading(true);
     setError("");
-    
+
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
