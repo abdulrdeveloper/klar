@@ -78,11 +78,12 @@ export default function DashboardPage() {
   const userRef = useRef<HTMLDivElement>(null);
 
   const firstLetter = (currentUser?.name.trim().charAt(0) || "U").toUpperCase();
+  const activeConversationId = activeChat?.conversationId;
   const isLoadingActiveConversation =
-    Boolean(activeChat?.conversationId) &&
+    typeof activeConversationId === "string" &&
     messages.length === 0 &&
-    (loadingConversationId === activeChat.conversationId ||
-      !loadedConversationIds.has(activeChat.conversationId));
+    (loadingConversationId === activeConversationId ||
+      !loadedConversationIds.has(activeConversationId));
 
   const updateActiveChat = (updater: (c: Chat) => Chat) => {
     setChats((prev) => prev.map((c) => (c.id === activeChatId ? updater(c) : c)));
@@ -250,11 +251,12 @@ export default function DashboardPage() {
     if (!currentUser || loadingConversationId) return;
 
     const chat = chats.find((item) => item.id === activeChatId);
-    if (!chat?.conversationId || chat.messages.length > 0) return;
-    if (loadedConversationIds.has(chat.conversationId)) return;
+    const conversationId = chat?.conversationId;
+    if (!conversationId || chat.messages.length > 0) return;
+    if (loadedConversationIds.has(conversationId)) return;
 
     const timeoutId = window.setTimeout(() => {
-      loadConversationMessages(chat.id, chat.conversationId);
+      loadConversationMessages(chat.id, conversationId);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);

@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { asc, and, eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/db";
 import { conversations, messages } from "@/db/schema";
 
 export async function GET(
-  _: Request,
-  { params }: { params: { id: string } },
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getCurrentUser();
 
   if (!session) {
@@ -22,7 +23,7 @@ export async function GET(
     .from(conversations)
     .where(
       and(
-        eq(conversations.id, params.id),
+        eq(conversations.id, id),
         eq(conversations.userId, session.userId),
       ),
     )
@@ -38,7 +39,7 @@ export async function GET(
       content: messages.content,
     })
     .from(messages)
-    .where(eq(messages.conversationId, params.id))
+    .where(eq(messages.conversationId, id))
     .orderBy(asc(messages.createdAt));
 
   return NextResponse.json({
@@ -49,9 +50,10 @@ export async function GET(
 }
 
 export async function DELETE(
-  _: Request,
-  { params }: { params: { id: string } },
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getCurrentUser();
 
   if (!session) {
@@ -63,7 +65,7 @@ export async function DELETE(
     .from(conversations)
     .where(
       and(
-        eq(conversations.id, params.id),
+        eq(conversations.id, id),
         eq(conversations.userId, session.userId),
       ),
     )
@@ -75,7 +77,7 @@ export async function DELETE(
 
   await db
     .delete(conversations)
-    .where(eq(conversations.id, params.id));
+    .where(eq(conversations.id, id));
 
   return NextResponse.json({ success: true });
 }
