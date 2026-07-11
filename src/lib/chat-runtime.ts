@@ -61,12 +61,12 @@ const MODEL_PROMPTS: Record<string, string> = {
 const MODEL_ROUTING: Record<string, ProviderModel[]> = {
   
     flash: [
-    { provider: "mistral", modelId: "ministral-8b-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+      { provider: "mistral", modelId: "mistral-small-latest" },
+      { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
   ],
 
   speed: [
-    { provider: "mistral", modelId: "ministral-8b-latest" },
+    { provider: "mistral", modelId: "mistral-small-latest" },
     { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
   ],
 

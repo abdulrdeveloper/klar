@@ -5,10 +5,10 @@ import { db } from "@/db";
 import { conversations, messages } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     const session = await getCurrentUser();
-    const body = await request.json();
+    const body = await req.json();
     const parsed = chatRequestSchema.safeParse(body);
 
     if (!parsed.success) {

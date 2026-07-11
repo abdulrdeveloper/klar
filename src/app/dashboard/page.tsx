@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   ArrowUp,
   Bot,
@@ -63,6 +63,8 @@ export default function DashboardPage() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
+  const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
+  const [loadedConversationIds, setLoadedConversationIds] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -76,13 +78,46 @@ export default function DashboardPage() {
   const userRef = useRef<HTMLDivElement>(null);
 
   const firstLetter = (currentUser?.name.trim().charAt(0) || "U").toUpperCase();
+  const isLoadingActiveConversation =
+    Boolean(activeChat?.conversationId) &&
+    messages.length === 0 &&
+    (loadingConversationId === activeChat.conversationId ||
+      !loadedConversationIds.has(activeChat.conversationId));
 
   const updateActiveChat = (updater: (c: Chat) => Chat) => {
     setChats((prev) => prev.map((c) => (c.id === activeChatId ? updater(c) : c)));
   };
 
+  const loadConversationMessages = useCallback(async (chatId: string, conversationId: string) => {
+    setLoadingConversationId(conversationId);
+
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (!data.messages) return;
+
+      setLoadedConversationIds((prev) => new Set(prev).add(conversationId));
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === chatId
+            ? { ...chat, messages: data.messages }
+            : chat,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to load messages", error);
+    } finally {
+      setLoadingConversationId((current) =>
+        current === conversationId ? null : current,
+      );
+    }
+  }, []);
+
   const handleSendMessage = async () => {
-    if (input.trim() === "" || isTyping || isRevealing) return;
+    if (input.trim() === "" || isTyping || isRevealing || isLoadingActiveConversation) return;
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -211,6 +246,27 @@ export default function DashboardPage() {
     loadConversations();
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser || loadingConversationId) return;
+
+    const chat = chats.find((item) => item.id === activeChatId);
+    if (!chat?.conversationId || chat.messages.length > 0) return;
+    if (loadedConversationIds.has(chat.conversationId)) return;
+
+    const timeoutId = window.setTimeout(() => {
+      loadConversationMessages(chat.id, chat.conversationId);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    activeChatId,
+    chats,
+    currentUser,
+    loadedConversationIds,
+    loadConversationMessages,
+    loadingConversationId,
+  ]);
+
 
 
   const handleNewChat = () => {
@@ -249,7 +305,7 @@ export default function DashboardPage() {
   await fetch("/api/auth/logout", { method: "POST" });
   router.push("/auth/login");
 };
-  
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -309,7 +365,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <button
-            className="md:hidden p-1 rounded hover:bg-[#1a1d24]"
+            className="md:hidden p-1 rounded cursor-pointer hover:bg-[#1a1d24]"
             onClick={() => setSidebarOpen(false)}
           >
             <X size={16} color="#9ca3af" />
@@ -319,7 +375,7 @@ export default function DashboardPage() {
         <div className="px-3">
           <button
             onClick={handleNewChat}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:brightness-110"
             style={{ background: GOLD, color: "#0f1015" }}
           >
             <Plus size={14} />
@@ -336,34 +392,9 @@ export default function DashboardPage() {
             return (
               <div
                 key={chat.id}
-                onClick={async () => {
+                onClick={() => {
                   setActiveChatId(chat.id);
                   setSidebarOpen(false);
-
-                  if (
-                    chat.conversationId &&
-                    chat.messages.length === 0
-                  ) {
-                    try {
-                      const res = await fetch(
-                        `/api/conversations/${chat.conversationId}`,
-                      );
-                      if (!res.ok) return;
-
-                      const data = await res.json();
-                      if (data.messages) {
-                        setChats((prev) =>
-                          prev.map((c) =>
-                            c.id === chat.id
-                              ? { ...c, messages: data.messages }
-                              : c,
-                          ),
-                        );
-                      }
-                    } catch (error) {
-                      console.error("Failed to load messages", error);
-                    }
-                  }
                 }}
                 className="group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors"
                 style={{
@@ -389,7 +420,7 @@ export default function DashboardPage() {
                 </span>
                 <button
                   onClick={(e) => handleDeleteChat(chat.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#2a2d34] transition-opacity"
+                  className="p-1 rounded cursor-pointer hover:bg-[#2a2d34] transition-opacity"
                 >
                   <Trash2 size={11} color="#6b7280" />
                 </button>
@@ -428,7 +459,7 @@ export default function DashboardPage() {
         >
           <div className="flex items-center gap-2">
             <button
-              className="md:hidden p-1.5 rounded-lg hover:bg-[#1a1d24]"
+              className="md:hidden p-1.5 rounded-lg cursor-pointer hover:bg-[#1a1d24]"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={16} color="#9ca3af" />
@@ -437,7 +468,7 @@ export default function DashboardPage() {
             <div className="relative" ref={modelRef}>
               <button
                 onClick={() => setModelOpen((p) => !p)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#1a1d24] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer hover:bg-[#1a1d24] transition-colors"
                 style={{ color: "#e5e7eb", border: "1px solid #2a2d34" }}
               >
                 <Bot size={12} style={{ color: "#d4af37" }} />
@@ -475,7 +506,7 @@ export default function DashboardPage() {
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = isSelected ? "#2a2d34" : "transparent";
                         }}
-                        className="w-full flex items-start justify-between px-3 py-2 text-left"
+                        className="w-full flex items-start justify-between px-3 py-2 text-left cursor-pointer"
                         style={{ backgroundColor: isSelected ? "#2a2d34" : "transparent" }}
                       >
                         <div className="flex flex-col gap-0.5">
@@ -510,7 +541,7 @@ export default function DashboardPage() {
           <div className="relative" ref={userRef}>
             <button
               onClick={() => setUserMenuOpen((p) => !p)}
-              className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-[#1a1d24] transition-colors"
+              className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full cursor-pointer hover:bg-[#1a1d24] transition-colors"
             >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
@@ -540,7 +571,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-[#22252e]"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left cursor-pointer hover:bg-[#22252e]"
                   style={{ color: "#e5e7eb", borderTop: "1px solid #2a2d34" }}
                 >
                   <LogOut size={13} style={{ color: "#d4af37" }} />
@@ -641,7 +672,7 @@ export default function DashboardPage() {
                   }
                 }}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask anything..."
+                placeholder={isLoadingActiveConversation ? "Loading conversation..." : "Ask anything..."}
                 className="w-full bg-transparent outline-none text-sm resize-none leading-relaxed"
                 style={{ color: "#e5e7eb", maxHeight: "160px", overflowY: "auto" }}
               />
@@ -653,8 +684,8 @@ export default function DashboardPage() {
               </span>
               <button
                 onClick={isTyping || isRevealing ? handleStopGeneration : handleSendMessage}
-                disabled={!input.trim() && !isTyping && !isRevealing}
-                className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
+                disabled={isLoadingActiveConversation || (!input.trim() && !isTyping && !isRevealing)}
+                className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
                 style={{ backgroundColor: isTyping || isRevealing ? "#2a2d34" : "#d4af37" }}
                 aria-label={isTyping || isRevealing ? "Stop generation" : "Send message"}
               >
