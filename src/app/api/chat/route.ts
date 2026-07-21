@@ -1,4 +1,5 @@
 import { chatRequestSchema } from "@/lib/validation";
+import { chatRateLimiter } from "@/lib/rate-limit";
 import { generateChatReply } from "@/lib/chat-runtime";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/db";
@@ -13,6 +14,21 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return new Response("Invalid chat request.", { status: 400 });
+    }
+
+    const identifier =
+      session?.userId ||
+      req.headers
+        .get("x-forwarded-for")
+        ?.split(",")[0]
+        .trim() ||
+      "anonymous";
+
+    const { success } = await chatRateLimiter.limit(identifier);
+    if (!success) {
+      return new Response("Too many requests. Please try again in a minute.", {
+        status: 429,
+      });
     }
 
     const { messages: chatMessages, model, conversationId } = parsed.data;

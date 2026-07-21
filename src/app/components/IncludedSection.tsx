@@ -7,7 +7,7 @@ const INCLUDED = [
   "Start chatting instantly, no signup",
   "Save and sync history once signed in",
   "Six models: Flash, Smart, Thinking, Speed, Coder, Deep",
-  "Up to 20 messages per minute — unlimited per day",
+  "Unlimited messages",
   "Streaming replies, word by word",
   "Switch models mid-conversation",
   "bcrypt passwords + JWT HTTP-only cookies",
