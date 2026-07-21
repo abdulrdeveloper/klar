@@ -57,6 +57,9 @@ JWT_SECRET=your_long_random_secret
 GROQ_API_KEY=your_groq_api_key
 MISTRAL_API_KEY=your_mistral_api_key
 RESEND_API_KEY=your_resend_api_key
+UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
+APP_URL=https://klar.abdulrdeveloper.me
 ```
 
 4. Run the development server
@@ -73,6 +76,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Logged-in conversations are stored in PostgreSQL.
 - Chat generation falls back across providers based on the selected mode.
 - Email verification is required before login completes.
+- Upstash Redis rate limits chat, registration, login, password-reset emails, and verification emails.
+- Set `APP_URL` to the trusted public URL so authentication links cannot be redirected by request headers.
 
 ## License
 

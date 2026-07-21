@@ -5,6 +5,8 @@ import { SignJWT } from "jose";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { loginRateLimiter } from "@/lib/rate-limit";
+import { getRequestIdentifier } from "@/lib/request-security";
 
 const secret = process.env.JWT_SECRET;
 if (!secret) throw new Error("JWT_SECRET is missing");
@@ -25,6 +27,18 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, password } = parsedResult.data;
+    const identifier = getRequestIdentifier(req);
+    const [ipLimit, emailLimit] = await Promise.all([
+      loginRateLimiter.limit(`ip:${identifier}`),
+      loginRateLimiter.limit(`email:${email.toLowerCase()}`),
+    ]);
+
+    if (!ipLimit.success || !emailLimit.success) {
+      return NextResponse.json(
+        { success: false, message: "Too many login attempts. Try again later." },
+        { status: 429 },
+      );
+    }
 
     const [user] = await db
       .select()

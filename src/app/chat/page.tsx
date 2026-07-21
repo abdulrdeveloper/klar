@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowUp, Bot, ChevronDown, Lock, X } from "lucide-react";
+import { ArrowUp, Bot, ChevronDown, Lock, Square } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { revealWords } from "@/lib/typewriter";
@@ -75,6 +75,7 @@ export default function ChatPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -171,6 +172,19 @@ export default function ChatPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!errorMessage) return;
+
+    const handleErrorDismiss = (e: PointerEvent) => {
+      if (!errorRef.current?.contains(e.target as Node)) {
+        setErrorMessage(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleErrorDismiss);
+    return () => document.removeEventListener("pointerdown", handleErrorDismiss);
+  }, [errorMessage]);
+
   const handleModelClick = (model: Model) => {
     if (!model.free) {
       router.push("/auth/login");
@@ -213,7 +227,7 @@ export default function ChatPage() {
 
       <div className="flex-1 overflow-y-auto">
         {errorMessage ? (
-          <div className="fixed bottom-[92px] left-1/2 z-20 w-[min(92vw,36rem)] -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg"
+          <div ref={errorRef} className="fixed bottom-[88px] left-1/2 z-20 w-[min(90vw,30rem)] -translate-x-1/2 rounded-lg border px-3 py-2 text-xs shadow-lg"
             style={{ backgroundColor: "#2a1d1d", borderColor: "#5c2b2b", color: "#fecaca" }}
           >
             {errorMessage}
@@ -314,10 +328,17 @@ export default function ChatPage() {
 
       <div className="px-4 pb-6 pt-2 max-w-3xl mx-auto w-full">
         <div
-          className="rounded-2xl"
+          className="rounded-2xl cursor-text"
+          onClick={(e) => {
+            if (!(e.target as HTMLElement).closest("button")) {
+              textareaRef.current?.focus();
+            }
+          }}
           style={{ backgroundColor: "#1a1d24", border: "1px solid #2a2d34" }}
         >
-          <div className="px-4 pt-3 pb-2">
+          <div
+            className="px-4 pt-3 pb-2 cursor-text"
+          >
             <textarea
               rows={1}
               ref={textareaRef}
@@ -330,7 +351,7 @@ export default function ChatPage() {
               }}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything..."
-              className="w-full bg-transparent outline-none text-sm resize-none leading-relaxed"
+              className="w-full bg-transparent outline-none text-sm resize-none leading-relaxed cursor-text"
               style={{
                 color: "#e5e7eb",
                 maxHeight: "160px",
@@ -439,12 +460,12 @@ export default function ChatPage() {
               <button
                 onClick={isTyping || isRevealing ? handleStopGeneration : handleSendMessage}
                 disabled={!input.trim() && !isTyping && !isRevealing}
-                className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-30"
+                className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer disabled:opacity-30"
                 style={{ backgroundColor: isTyping || isRevealing ? "#2a2d34" : "#d4af37" }}
                 aria-label={isTyping || isRevealing ? "Stop generation" : "Send message"}
               >
                 {isTyping || isRevealing ? (
-                  <X size={16} color="#e5e7eb" />
+                  <Square size={13} fill="#e5e7eb" color="#e5e7eb" />
                 ) : (
                   <ArrowUp size={16} color="#0f1015" />
                 )}

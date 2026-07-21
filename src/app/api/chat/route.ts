@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/db";
 import { conversations, messages } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { getRequestIdentifier } from "@/lib/request-security";
 
 export async function POST(req: Request) {
   try {
@@ -16,15 +17,9 @@ export async function POST(req: Request) {
       return new Response("Invalid chat request.", { status: 400 });
     }
 
-    const identifier =
-      session?.userId ||
-      req.headers
-        .get("x-forwarded-for")
-        ?.split(",")[0]
-        .trim() ||
-      "anonymous";
+    const identifier = session?.userId || getRequestIdentifier(req);
 
-    const { success } = await chatRateLimiter.limit(identifier);
+    const { success } = await chatRateLimiter.limit(`chat:${identifier}`);
     if (!success) {
       return new Response("Too many requests. Please try again in a minute.", {
         status: 429,

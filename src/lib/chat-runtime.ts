@@ -62,32 +62,32 @@ const MODEL_ROUTING: Record<string, ProviderModel[]> = {
   
     flash: [
       { provider: "mistral", modelId: "mistral-small-latest" },
-      { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+      { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 
   speed: [
     { provider: "mistral", modelId: "mistral-small-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+    { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 
   smart: [
     { provider: "mistral", modelId: "mistral-large-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+    { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 
   deep: [
     { provider: "mistral", modelId: "mistral-large-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+    { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 
   thinking: [
     { provider: "mistral", modelId: "mistral-small-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+    { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 
   coder: [
     { provider: "mistral", modelId: "codestral-latest" },
-    { provider: "groq", modelId: "meta-llama/llama-4-scout-17b-16e-instruct" },
+    { provider: "groq", modelId: "llama-3.3-70b-versatile" },
   ],
 };
 

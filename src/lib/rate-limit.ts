@@ -17,6 +17,21 @@ export const chatRateLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 m"),
 });
 
+export const loginRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "15 m"),
+});
+
+export const passwordEmailRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+});
+
+export const verificationEmailRateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "1 h"),
+});
+
 export const registerRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(5, "1 h"),

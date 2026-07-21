@@ -7,19 +7,15 @@ import { db } from "@/db";
 import { users, verifyTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
+import { getAppUrl, getRequestIdentifier } from "@/lib/request-security";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const identifier =
-      req.headers
-        .get("x-forwarded-for")
-        ?.split(",")[0]
-        .trim() ||
-      "anonymous";
+    const identifier = getRequestIdentifier(req);
 
-    const { success } = await registerRateLimiter.limit(identifier);
+    const { success } = await registerRateLimiter.limit(`register:${identifier}`);
     if (!success) {
       return NextResponse.json(
         {
@@ -86,7 +82,7 @@ export async function POST(req: NextRequest) {
     });
 
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const baseURL = req.headers.get("origin") || "http://localhost:3000";
+    const baseURL = getAppUrl();
     const verifyURL = `${baseURL}/auth/verify?token=${verifyToken}`;
 
     const emailHtml = `<!DOCTYPE html>

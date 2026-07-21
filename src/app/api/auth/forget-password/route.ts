@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { users, resetTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
+import { passwordEmailRateLimiter } from "@/lib/rate-limit";
+import { getAppUrl, getRequestIdentifier } from "@/lib/request-security";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +16,14 @@ export async function POST(req: NextRequest) {
         { success: false, message: "Email is required" },
         { status: 400 },
       );
+    }
+
+    const [ipLimit, emailLimit] = await Promise.all([
+      passwordEmailRateLimiter.limit(`ip:${getRequestIdentifier(req)}`),
+      passwordEmailRateLimiter.limit(`email:${email.toLowerCase()}`),
+    ]);
+    if (!ipLimit.success || !emailLimit.success) {
+      return NextResponse.json({ success: true });
     }
 
     const [user] = await db
@@ -36,7 +46,7 @@ export async function POST(req: NextRequest) {
     });
 
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const baseURL = req.headers.get("origin") || "http://localhost:3000";
+    const baseURL = getAppUrl();
     const resetURL = `${baseURL}/auth/reset-password?token=${resetToken}`;
 
     const emailHtml = `<!DOCTYPE html>

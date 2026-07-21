@@ -18,7 +18,7 @@ export const chatMessageSchema = z.object({
 
 export const chatRequestSchema = z.object({
   conversationId: z.string().uuid().optional(),
-  messages: z.array(chatMessageSchema).min(1),
+  messages: z.array(chatMessageSchema).min(1).max(20),
   model: z.string().min(1).optional(),
 });
 
