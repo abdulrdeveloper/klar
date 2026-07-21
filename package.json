@@ -13,6 +13,8 @@
     "@ai-sdk/groq": "^4.0.0",
     "@ai-sdk/mistral": "^4.0.5",
     "@neondatabase/serverless": "^1.1.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "ai": "^7.0.3",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",

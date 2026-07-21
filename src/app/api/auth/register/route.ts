@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registerSchema } from "@/lib/validation";
+import { registerRateLimiter } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { db } from "@/db";
@@ -10,6 +11,24 @@ import { Resend } from "resend";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const identifier =
+      req.headers
+        .get("x-forwarded-for")
+        ?.split(",")[0]
+        .trim() ||
+      "anonymous";
+
+    const { success } = await registerRateLimiter.limit(identifier);
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Too many registration requests. Try again later.",
+        },
+        { status: 429 },
+      );
+    }
 
     const parsedResult = registerSchema.safeParse(body);
     if (!parsedResult.success) {
@@ -150,7 +169,7 @@ await resend.emails.send({
       },
       { status: 200 },
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,
